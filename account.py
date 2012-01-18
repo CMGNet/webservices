@@ -19,11 +19,11 @@ define("db", default="./ratbox-services.db", help="database to use", type=str)
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r"/", HomeHandler),
-            (r"/users", UsersHandler),
-            (r"/user/([^/]+)/password", ChangePasswordHandler),
-            (r"/user/register", RegistrationHandler),
-            (r"/user/([^/]+)/register", RegistrationHandler),
+            (r"/cmgnet/", HomeHandler),
+            (r"/cmgnet/users", UsersHandler),
+            (r"/cmgnet/user/([^/]+)/password", ChangePasswordHandler),
+            (r"/cmgnet/user/register", RegistrationHandler),
+            (r"/cmgnet/user/([^/]+)/register", RegistrationHandler),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
@@ -87,7 +87,7 @@ class RegistrationHandler(BaseHandler):
 
     def post(self, username=None):
         if username == None:
-            self.redirect("/user/%s/register" % self.get_argument("username"))
+            self.redirect("/cmgnet/user/%s/register" % self.get_argument("username"))
             return
         user = self.get_user(username)
         if user != None: raise tornado.web.HTTPError(404)
