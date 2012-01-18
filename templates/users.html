@@ -2,9 +2,7 @@
 
 {% block main %}
     {% for user in users %}
-        {{ user[0] }} <br/>
-        {{ user[1] }} <br/>
-        {{ crypt.crypt("dicks", user[1] ) }} <br/>
+        <a href="user/{{ user[0] }}/password">{{ user[0] }}</a> <br/>
         <br/>
     {% end %}
 {% end%}
