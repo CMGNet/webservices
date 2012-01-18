@@ -90,7 +90,7 @@ class ChangePasswordHandler(BaseHandler):
         if crypt.crypt(current, user['password']) == user['password'] and newpw == confirm:
             newpw = crypt.crypt(newpw, "$1$%s$" % self.getsalt(8))
 
-            self.db.execute("update users set password = ? where username = ?", (newpw, username,))
+            self.db.execute("insert into users_sync (hook, data) values (?, ?)", ("SETPASS", " ".join([username, newpw])))
             self.db.commit()
 
             self.render("changepassword.html", username = user['username'], message = "Your password was successfuly updated")
