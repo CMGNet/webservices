@@ -35,10 +35,13 @@ class Application(tornado.web.Application):
         self.db = sqlite3.connect(options.db)
 
 class BaseHandler(tornado.web.RequestHandler):
-    def getsalt(self):
+    def getsalt(self, length):
         chars = string.letters + string.digits
         # generate a random 2-character 'salt'
-        return random.choice(chars) + random.choice(chars)
+        salt = []
+        for i in xrange(length):
+            salt.append(random.choice(chars))
+        return "".join(salt)
 
     @property
     def db(self):
@@ -85,10 +88,9 @@ class ChangePasswordHandler(BaseHandler):
         newpw = self.get_argument("password")
         confirm = self.get_argument("confirm")
         if crypt.crypt(current, user['password']) == user['password'] and newpw == confirm:
-            newpw = crypt.crypt(newpw, self.getsalt())
+            newpw = crypt.crypt(newpw, "$1$%s$" % self.getsalt(8))
 
-            c = self.cursor()
-            c.execute("update users set password = ? where username = ?", (newpw, username,))
+            self.db.execute("update users set password = ? where username = ?", (newpw, username,))
             self.db.commit()
 
             self.render("changepassword.html", username = user['username'], message = "Your password was successfuly updated")
