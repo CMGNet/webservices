@@ -1,0 +1,18 @@
+{% extends home.html %}
+
+{% block main %}
+    <div>
+        <form method="post">
+            {% if len(message) %}
+                <div>{{ message }}</div>
+                <br/>
+            {% end if %}
+            Username: {{ username }} <br/>
+            Password: <input name="password" type="password" /> <br/>
+            Confirm: <input name="confirm" type="password" /> <br/>
+            <button type="submit">Register Account</button>
+            {{ xsrf_form_html() }}
+        </form>
+    </div>
+        
+{% end%}

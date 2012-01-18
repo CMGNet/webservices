@@ -22,6 +22,8 @@ class Application(tornado.web.Application):
             (r"/", HomeHandler),
             (r"/users", UsersHandler),
             (r"/user/([^/]+)/password", ChangePasswordHandler),
+            (r"/user/register", RegistrationHandler),
+            (r"/user/([^/]+)/register", RegistrationHandler),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
@@ -74,11 +76,36 @@ class UsersHandler(BaseHandler):
 
         c.close()
 
+class RegistrationHandler(BaseHandler):
+    def get(self, username=None):
+        if username == None:
+            self.render("register_stepone.html", username = username, message = "")
+            return
+        user = self.get_user(username)
+        if user != None: raise tornado.web.HTTPError(404)
+        self.render("register.html", username = username, message = "")
+
+    def post(self, username=None):
+        if username == None:
+            self.redirect("/user/%s/register" % self.get_argument("username"))
+            return
+        user = self.get_user(username)
+        if user != None: raise tornado.web.HTTPError(404)
+
+        newpw = self.get_argument("password")
+        confirm = self.get_argument("confirm")
+        newpw = crypt.crypt(newpw, "$1$%s$" % self.getsalt(8))
+
+        self.db.execute("insert into users_sync (hook, data) values (?, ?)", ("REGISTER", " ".join([username, newpw])))
+        self.db.commit()
+
+        self.render("register.html", username = username, message = "Your account has been created")
+
 class ChangePasswordHandler(BaseHandler):
     def get(self, username):
         user = self.get_user(username)
         if user == None: raise tornado.web.HTTPError(404)
-        self.render("changepassword.html", username = user['username'], message = "")
+        self.render("changepassword.html", username = username, message = "")
 
     def post(self, username):
         user = self.get_user(username)
@@ -93,9 +120,9 @@ class ChangePasswordHandler(BaseHandler):
             self.db.execute("insert into users_sync (hook, data) values (?, ?)", ("SETPASS", " ".join([username, newpw])))
             self.db.commit()
 
-            self.render("changepassword.html", username = user['username'], message = "Your password was successfuly updated")
+            self.render("changepassword.html", username = username, message = "Your password was successfuly updated")
         else:
-            self.render("changepassword.html", username = user['username'], message = "Your current password was incorrect")
+            self.render("changepassword.html", username = username, message = "Your current password was incorrect")
 
 def main():
     tornado.options.parse_command_line()
@@ -106,6 +133,8 @@ def main():
     autoreload.watch("templates/home.html")
     autoreload.watch("templates/users.html")
     autoreload.watch("templates/changepassword.html")
+    autoreload.watch("templates/register.html")
+    autoreload.watch("templates/register_stepone.html")
     autoreload.start()
     tornado.ioloop.IOLoop.instance().start()
 
