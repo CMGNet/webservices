@@ -1,0 +1,10 @@
+{% extends home.html %}
+
+{% block main %}
+    {% for user in users %}
+        {{ user[0] }} <br/>
+        {{ user[1] }} <br/>
+        {{ crypt.crypt("dicks", user[1] ) }} <br/>
+        <br/>
+    {% end %}
+{% end%}
