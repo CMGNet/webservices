@@ -9,6 +9,8 @@ import tornado.web
 import unicodedata
 import sqlite3
 import crypt
+import random
+import string
 
 from tornado.options import define, options
 define("port", default=8888, help="run on the given port", type=int)
@@ -33,8 +35,13 @@ class Application(tornado.web.Application):
         self.db = sqlite3.connect(options.db)
 
 class BaseHandler(tornado.web.RequestHandler):
+    def getsalt(self):
+        chars = string.letters + string.digits
+        # generate a random 2-character 'salt'
+        return random.choice(chars) + random.choice(chars)
+
     @property
-    def db():
+    def db(self):
         return self.application.db
 
     def cursor(self):
@@ -77,9 +84,13 @@ class ChangePasswordHandler(BaseHandler):
         current = self.get_argument("current")
         newpw = self.get_argument("password")
         confirm = self.get_argument("confirm")
-        print(repr(crypt.crypt(current, user['password'])))
-        print(repr(user['password']))
-        if crypt.crypt(current, user['password']) == user['password']:
+        if crypt.crypt(current, user['password']) == user['password'] and newpw == confirm:
+            newpw = crypt.crypt(newpw, self.getsalt())
+
+            c = self.cursor()
+            c.execute("update users set password = ? where username = ?", (newpw, username,))
+            self.db.commit()
+
             self.render("changepassword.html", username = user['username'], message = "Your password was successfuly updated")
         else:
             self.render("changepassword.html", username = user['username'], message = "Your current password was incorrect")
