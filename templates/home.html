@@ -4,6 +4,13 @@
         <title>CMGNet</title>
     </head>
     <body>
-        {% block main %}{% end %}
+        <center>
+        <img src="{{ static_url("logo.svg") }}" height="200px"/>
+        </center>
+        <br/>
+        {% block main %}
+                <a href="/cmgnet/user/register">Register an account</a>
+        {% end %}
     </body>
 </html>
+
